@@ -4,8 +4,14 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Catagory;
+use App\Models\Order;
 use App\Models\Products;
+
+use Illuminate\Support\Facades\Auth;
 use Symfony\Contracts\Service\Attribute\Required;
+use PDF;
+use Notification;
+use App\Notifications\SendEmailNotifications;
 
 class AdminController extends Controller
 {
@@ -94,5 +100,66 @@ class AdminController extends Controller
         }
         $product->save();
         return redirect()->back()->with("message", "product are Updated successfully");;
+    }
+    public function order()
+    {
+        $order = Order::all();
+
+        return  view('admin.order', compact('order'));
+    }
+
+    public function delivered($id)
+    {
+        $order = Order::find($id);
+        $order->delivery_status = 'delivered';
+        $order->payment_status = "Paid";
+        $order->save();
+        return redirect()->back();
+    }
+    public function print_pdf($id)
+    {
+        try {
+            $order = Order::find($id);
+            //here i am loading the view of that admin.pdf file and then i have converting the Pdf
+            $pdf = PDF::loadView('admin.pdf', compact("order"));
+            return $pdf->download('order_details.pdf');
+        } catch (\Throwable $th) {
+
+            return redirect();
+        }
+    }
+    public function send_email($id)
+    {
+        $order = Order::find($id);
+
+        return view('admin.email_info', compact('order'));
+    }
+    public function send_user_email(Request $request, $id)
+    {
+        $order = Order::find($id);
+
+        $details = [
+            'greeting' => $request->greeting,
+            'firstline' => $request->firstline,
+            'body' => $request->body,
+            'button' => $request->button,
+            'url' => $request->url,
+            'lastline' => $request->lastline,
+
+        ];
+
+        Notification::send($order, new SendEmailNotifications($details));
+
+        return redirect()->back();
+    }
+
+    public function searchdata(Request $request)
+    {
+        $searchText = $request->search;
+
+        $order = Order::where('name', 'LIKE', "%$searchText%")->orWhere('product_title', 'LIKE', "%$searchText%")->orWhere('phone', 'LIKE', "%$searchText%")->get();
+
+
+      return  view('admin.order', compact("order"));
     }
 }

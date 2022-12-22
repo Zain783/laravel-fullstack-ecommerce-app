@@ -314,6 +314,45 @@
     <!-- product section -->
     @include('home.product')
     <!-- end product section -->
+    {{-- comment and reply system --}}
+
+    <div style="text-align:center;padding-bottom:30px;">
+
+        <h1 style="font-size:30px; text-align:center;padding-top:20px;padding-bottom:20px;">Comments</h1>
+        <form action="">
+            <textarea style="height: 150;width:600px;" name="" id="" cols="30" rows="10"></textarea>
+            <br>
+            <a href="" class="btn btn-primary">Comment</a>
+        </form>
+    </div>
+    <div style="padding-left: 20%;">
+
+        <h1 style="font-size: 20px;">All Comments</h1>
+        <div> <b>Zain</b>
+            <p>this is my first comment</p>
+            <a href="javascript::void(0);" class="replyDiv" onclick="reply(this)">Reply</a>
+        </div>
+        <div> <b>Khizer</b>
+            <p>this is my first comment</p>
+            <a href="javascript::void(0);" class="replyDiv" onclick="reply(this)">Reply</a>
+        </div>
+        <div> <b>Asad</b>
+            <p>this is my first comment</p>
+            <a href="javascript::void(0);" onclick="reply(this)">Reply</a>
+        </div>
+        <div style="display:none;" class="replyDiv">
+            <textarea style="hight:100px;width:500px;" placeholder="write somthing here"></textarea>
+            <a href="" class="btn btn-primary">Reply</a>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        function reply(caller) {
+            $('.replyDiv').insertAfer($(caller));
+            $('.replyDiv').show();
+        }
+    </script>
+
     <!-- subscribe section -->
     @include('home.subscriber')
     <!-- end subscribe section -->
@@ -329,14 +368,16 @@
 
         </p>
     </div>
+
+
     <!-- jQery -->
-    <script src="/home/js/jquery-3.4.1.min.js"></script>
+    <script src="home/js/jquery-3.4.1.min.js"></script>
     <!-- popper js -->
-    <script src="/home/js/popper.min.js"></script>
+    <script src="home/js/popper.min.js"></script>
     <!-- bootstrap js -->
-    <script src="/home/js/bootstrap.js"></script>
+    <script src="home/js/bootstrap.js"></script>
     <!-- custom js -->
-    <script src="/home/js/custom.js"></script>
+    <script src="home/js/custom.js"></script>
 </body>
 
 </html>

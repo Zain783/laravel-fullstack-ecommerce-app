@@ -7,23 +7,70 @@ use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use App\Models\Products;
 use App\Models\Cart;
+use App\Models\Order;
+use Session;
+use Stripe;
+use Stripe\Product;
 
 class HomeController extends Controller
 {
-
     public function index()
     {
-        $product = Products::paginate(8);
+        try {
+            $usertype = Auth::user()->usertype;
+            if ($usertype == '1') {
+                $total_product = Products::all()->count();
+                $total_orders = Order::all()->count();
+                $total_users = User::all()->count();
+                $orders = Order::all();
+                $total_sale = 0;
+                $total_delivered_order = 0;
+                $total_processing_order = 0;
+                foreach ($orders as  $orders) {
+                    $total_sale = $total_sale + $orders->price;
+                    if ($orders->delivery_status == "delivered") {
+
+                        $total_delivered_order = $total_delivered_order + 1;
+                    } else {
+                        $total_processing_order = $total_processing_order + 1;
+                    }
+                }
+                return view('admin.home', compact('total_product', 'total_users', 'total_orders', 'total_orders', 'total_sale', 'total_delivered_order', 'total_processing_order'));
+            } else {
+                //if the user is logined then we move to that page
+                $product = Products::paginate(10);
+                return view('home.userpage', compact("product"));
+            }
+        } catch (\Throwable $th) {
+            //throw $th;
+        }
+        //If the user is Not logined
+        $product = Products::paginate(10);
         return view('home.userpage', compact("product"));
     }
     public function  redirect()
     {
         $usertype = Auth::user()->usertype;
-        if ($usertype == '1') {
+        if ($usertype == "1") {
+            $total_product = Products::all()->count();
+            $total_orders = Order::all()->count();
+            $total_users = User::all()->count();
+            $orders = Order::all();
+            $total_sale = 0;
+            $total_delivered_order = 0;
+            $total_processing_order = 0;
+            foreach ($orders as  $orders) {
+                $total_sale = $total_sale + $orders->price;
+                if ($orders->delivery_status == "delivered") {
 
-            return view('admin.home');
+                    $total_delivered_order = $total_delivered_order + 1;
+                } else {
+                    $total_processing_order = $total_processing_order + 1;
+                }
+            }
+            return view('admin.home', compact('total_product', 'total_users', 'total_orders', 'total_orders', 'total_sale', 'total_delivered_order', 'total_processing_order'));
         } else {
-            $product = Products::paginate(1);
+            $product = Products::paginate(10);
             return view('home.userpage', compact("product"));
         }
     }
@@ -85,5 +132,102 @@ class HomeController extends Controller
         // after find the product by id then we will delete this product
         $cart->delete();
         return redirect()->back();
+    }
+    public function cash_order()
+    {
+        //here we are getting id of the current user here who added product
+        $user = Auth::user();
+        $userid = $user->id;
+        //here we are getting all the product which in cart added by current user from cart table
+        //Note:this will return a list which contain all cart item which added by the current login user
+        $data = Cart::where('user_id', '=', $userid)->get();
+        //Note:data contain list of cart items
+        foreach ($data as $data) {
+            $order = new Order();
+            $order->name = $data->name;
+            $order->email = $data->email;
+            $order->phone = $data->phone;
+            $order->address = $data->address;
+            $order->user_id = $data->user_id;
+            $order->product_title = $data->product_title;
+            $order->price = $data->price;
+            $order->name = $data->name;
+            $order->quantity = $data->quantity;
+            $order->image = $data->image;
+            $order->product_id = $data->product_id;
+            $order->payment_status = 'cash on delivery';
+            $order->delivery_status = 'processing';
+            $order->save();
+            //note that after save order we are deleting products from cart table one by one
+            $card_id = $data->id;
+            $cart = Cart::find($card_id);
+            $cart->delete();
+        }
+        return redirect()->back()->with('message', 'We Received Your Order .We will connect with you Soon...');
+    }
+    public function stripe($totalprice)
+    {
+
+        return view('home.stripe', compact('totalprice'));
+    }
+    public function stripePost(Request $request, $totalprice)
+    {
+        Stripe\Stripe::setApiKey(env('STRIPE_SECRET'));
+
+        Stripe\Charge::create([
+            //here we need have to multiply totalprice with 100 because it calulate in cents therefore we need have to multiply it to 100
+            "amount" => $totalprice * 100,
+            "currency" => "usd",
+            "source" => $request->stripeToken,
+            "description" => "Thanks For Payment."
+        ]);
+        // Session::flash('success', 'Payment successful!');
+        $user = Auth::user();
+        $userid = $user->id;
+        //here we are getting all the product which in cart added by current user from cart table
+        //Note:this will return a list which contain all cart item which added by the current login user
+        $data = Cart::where('user_id', '=', $userid)->get();
+        //Note:data contain list of cart items
+        foreach ($data as $data) {
+            $order = new Order();
+            $order->name = $data->name;
+            $order->email = $data->email;
+            $order->phone = $data->phone;
+            $order->address = $data->address;
+            $order->user_id = $data->user_id;
+            $order->product_title = $data->product_title;
+            $order->price = $data->price;
+            $order->name = $data->name;
+            $order->quantity = $data->quantity;
+            $order->image = $data->image;
+            $order->product_id = $data->product_id;
+            $order->payment_status = 'Paid';
+            $order->delivery_status = 'processing';
+            $order->save();
+            //note that after save order we are deleting products from cart table one by one
+            $card_id = $data->id;
+            $cart = Cart::find($card_id);
+            $cart->delete();
+        }
+        return back()->with('message', 'Payment successful!');
+    }
+    public function show_order()
+    {
+        if (Auth::id()) {
+
+            $user = Auth::user();
+            $userid = $user->id;
+            $order = Order::where('user_id', '=', $userid)->get();
+            return view('home.order', compact('order'));
+        } else {
+            return view('login');
+        }
+    }
+    public function CancelOrder($id)
+    {
+        $order=Order::find($id);
+        $order->delivery_status="you canceled the Order";
+        $order->save();
+        return redirect();
     }
 }

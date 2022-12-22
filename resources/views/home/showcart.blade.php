@@ -67,34 +67,48 @@
 </head>
 
 <body>
-    @include('home.header')
-    <?php $totalprice = 0; ?>
-    <div class="center">
-        <table>
-            <tr>
-                <th class="th_deg">Product Title</th>
-                <th class="th_deg">Product Quantity</th>
-                <th class="th_deg">Price</th>
-                <th class="th_deg">Image</th>
-                <th class="th_deg">Action</th>
-            </tr>
-
-
-            @foreach ($cart as $cart)
+    <div class="hero_area">
+        @include('home.header')
+        @if (session()->has('message'))
+            <div class="alert alert-success">
+                <button type="button" class="close" data-dismiss="alert"
+                    aria-hidden="true">x</button>{{ session()->get('message') }}
+                {{ session()->get('message') }}
+            </div>
+        @endif
+        <?php $totalprice = 0; ?>
+        <div class="center">
+            <table>
                 <tr>
-                    <td>{{ $cart->product_title }}</td>
-                    <td>{{ $cart->quantity }}</td>
-                    <td>${{ $cart->price }}</td>
-                    <td><img class="img_deg" src="/product/{{ $cart->image }}" alt=""></td>
-                    <td><a href="{{url('remove_cart',$cart->id)}}" class="btn btn-danger">remove product</a></td>
+                    <th class="th_deg">Product Title</th>
+                    <th class="th_deg">Product Quantity</th>
+                    <th class="th_deg">Price</th>
+                    <th class="th_deg">Image</th>
+                    <th class="th_deg">Action</th>
                 </tr>
-                <?php $totalprice = $totalprice + $cart->price; ?>
-            @endforeach
+
+
+                @foreach ($cart as $cart)
+                    <tr>
+                        <td>{{ $cart->product_title }}</td>
+                        <td>{{ $cart->quantity }}</td>
+                        <td>${{ $cart->price }}</td>
+                        <td><img class="img_deg" src="/product/{{ $cart->image }}" alt=""></td>
+                        <td><a href="{{ url('remove_cart', $cart->id) }}" class="btn btn-danger">remove product</a></td>
+                    </tr>
+                    <?php $totalprice = $totalprice + $cart->price; ?>
+                @endforeach
 
 
 
-        </table>
-        <h1 class="total_deg">Total Price: ${{ $totalprice }}</h1>
+            </table>
+            <h1 class="total_deg">Total Price: ${{ $totalprice }}</h1>
+            <div>
+                <h1 style="font-size: 25px;">Proceed to Order</h1>
+                <a href="{{ url('cash_order') }}" class="btn btn-danger">Cash On Delivery</a>
+                <a href="{{url('stripe',$totalprice)}}" class="btn btn-danger" >Pay Using Card</a>
+            </div>
+        </div>
     </div>
 
     <div class="cpy_">

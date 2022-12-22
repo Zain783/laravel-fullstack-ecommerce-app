@@ -28,9 +28,30 @@
             margin: auto;
             width: 50%;
             text-align: center;
+            color: black;
             margin-top: 30px;
-            border: 3px solid green;
 
+        }
+
+        .table_container {
+
+            background-color: white;
+            border-radius: 15px;
+            margin-left: 30%;
+            margin-right: 30%;
+
+        }
+
+        .table_td {
+
+            color: black;
+        }
+        .table_header{
+
+            background-color: skyblue;
+            border-radius: 5px;
+            
+            
         }
     </style>
 </head>
@@ -51,7 +72,8 @@
                 @if (session()->has('message'))
                     <div class="alert alert-success">
                         <button type="button" class="close" data-dismiss="alert"
-                            aria-hidden="true">x</button>{{ session()->get('message') }}</div>
+                            aria-hidden="true">x</button>{{ session()->get('message') }}
+                    </div>
                 @endif
                 <div class="div_center">
                     <h2 class="h2_font">Add Catagory</h2>
@@ -61,22 +83,24 @@
                         <input type="submit" name="submit" class="btn btn-primary" value="Add Catagory">
                     </form>
                 </div>
-                <table class="center">
-                    <tr>
-                        <td>Catagory Name</td>
-                        <td>Action</td>
-                    </tr>
-
-                    @foreach ($data as $data)
-                        <tr>
-                            <td>{{ $data->catagory_name }}</td>
-                            {{-- @csrf --}}
-                            <td><a onclick="return confirm('Are You Sure To Delete This')" class="btn btn-danger"
-                                    href="{{ URL('delete_catagory', $data->id) }}">Delete</a></td>
+                <div class="table_container">
+                    <table class="center">
+                        <tr class="table_header">
+                            <td>Catagory Name</td>
+                            <td>Action</td>
                         </tr>
-                    @endforeach
 
-                </table>
+                        @foreach ($data as $data)
+                            <tr class="table_td">
+                                <td>{{ $data->catagory_name }}</td>
+                                {{-- @csrf --}}
+                                <td><a onclick="return confirm('Are You Sure To Delete This')" class="btn btn-danger"
+                                        href="{{ URL('delete_catagory', $data->id) }}">Delete</a></td>
+                            </tr>
+                        @endforeach
+
+                    </table>
+                </div>
             </div>
             <!-- page-body-wrapper ends -->
         </div>
